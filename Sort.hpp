@@ -1,12 +1,13 @@
 #pragma once
 
 #include <iostream>
-#include <pthread.h>
+#include <thread>
 #include <exception>
 #include <string>
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 
 #include <bitset>
 
