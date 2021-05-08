@@ -11,7 +11,7 @@ void	generateRandom()
 	try
 	{
 		file.open(path, ios::binary);
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 20; i++)
 		{
 			num = rand() % 50; //% RAND_MAX;
 			numStr = bitset<32>(num).to_string();
@@ -85,7 +85,7 @@ void	readNumbers(int position, int *count)
 	}
 }
 
-void	mergeTwo(string fileOne, string fileTwo, int count)
+void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps)
 {
 	ifstream	f1;
 	ifstream	f2;
@@ -99,7 +99,7 @@ void	mergeTwo(string fileOne, string fileTwo, int count)
 		f1.open(fileOne);
 		f2.open(fileTwo);
 		stringstream ss;
-		ss << "merge" << "0" << count;
+		ss << "temp" << countSteps << count;
 		outFileNmae = ss.str();
 		ss.clear();
 		out1.open(outFileNmae);
@@ -117,7 +117,6 @@ void	mergeTwo(string fileOne, string fileTwo, int count)
 
 		while(a && b)
 		{
-			cout << a << " " << b << endl;
 			if (a == b)
 			{
 				getline(f1, line1);
@@ -133,7 +132,17 @@ void	mergeTwo(string fileOne, string fileTwo, int count)
 				getline (f1, line1);
 				istringstream iss1(line1);
 				if (!(iss1 >> a))
+				{
+					while (b)
+					{
+						out1 << b << endl;
+						getline (f2, line2);
+						istringstream iss2(line2);
+						if (!(iss2 >> b))
+							break ;
+					}
 					break ;
+				}
 			}
 			else if (b < a)
 			{
@@ -141,29 +150,17 @@ void	mergeTwo(string fileOne, string fileTwo, int count)
 				getline (f2, line2);
 				istringstream iss2(line2);
 				if (!(iss2 >> b))
+				{
+					while (a)
+					{
+						out1 << a << endl;
+						getline (f1, line1);
+						istringstream iss1(line1);
+						if (!(iss1 >> a))
+							break ;
+					}
 					break ;
-			}
-		}
-		if (!(iss2 >> b))
-		{
-			while (a)
-			{
-				out1 << a << endl;
-				getline (f1, line1);
-				istringstream iss1(line1);
-				if (!(iss1 >> a))
-					break ;
-			}
-		}
-		else if (!(iss1 >> a))
-		{
-			while (b)
-			{
-				out1 << b << endl;
-				getline (f2, line2);
-				istringstream iss2(line2);
-				if (!(iss2 >> b))
-					break ;
+				}
 			}
 		}
 		f1.close();
@@ -177,28 +174,70 @@ void	mergeTwo(string fileOne, string fileTwo, int count)
 	
 }
 
-void	mergeFiles(int numFiles)
+int	mergeFiles(int numFiles)
 {
 	stringstream f1;
 	stringstream f2;
-	int count = 0;
+	int countFiles;
+	int countSteps = 1;
 
-	if (numFiles % 2 == 0)
+	while (numFiles > 1)
 	{
-		//easy tree
-	}
-	else
-	{
+		countFiles = 0;
 		for (int i = 0; i < numFiles - 1; i = i + 2)
 		{
-			f1 << "temp" << 0 << i;
-			f2 << "temp" << 0 << i + 1;
-			cout << "files " << f1.str() << " " << f2.str() << endl;
-			mergeTwo(f1.str(), f2.str(), count);
+			f1 << "temp" << countSteps - 1 << i;
+			f2 << "temp" << countSteps - 1 << i + 1;
+			//cout << "files " << f1.str() << " " << f2.str() << endl;
+			mergeTwo(f1.str(), f2.str(), countFiles, countSteps);
 			f1.str("");
 			f2.str("");
-			count++;
+			countFiles++;
 		}
+		if (numFiles % 2 == 0)
+		{
+			//easy tree
+		}
+		else
+		{
+			//here
+		}
+		numFiles = numFiles / 2;
+		countSteps++;	
+	}
+
+	return (countSteps);
+}
+
+void	outputResult(int numSteps)
+{
+	string 		outFileName = "output";
+	ofstream	outFile;
+	ifstream	inFile;
+	string		line;
+	uint32_t	num;
+	string		outLine;
+
+	try
+	{
+		stringstream inFileName;
+		inFileName << "temp" << numSteps - 1 << 0;
+		inFile.open(inFileName.str());
+		outFile.open(outFileName);
+		while (getline(inFile, line))
+		{
+			istringstream iss1(line);
+			if (!(iss1 >> num))
+				break ;
+			outLine = bitset<32>(num).to_string();
+			outFile << outLine;
+		}
+		outFile.close();
+		inFile.close();
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << endl;
 	}
 	
 }
@@ -206,25 +245,17 @@ void	mergeFiles(int numFiles)
 int main(void)
 {
 	auto start = chrono::high_resolution_clock::now();
-	//generateRandom();
+	generateRandom();
 	vector<uint32_t> vecOne;
 	int	numFiles;
+	int numSteps;
 
 
 	thread threadOne(readNumbers, 0, &numFiles);
 	threadOne.join();
 	cout << "files num = " << numFiles << endl;
-	mergeFiles(numFiles);
-
-
-	vecOne = sortVector(vecOne);
-	cout << "vec 1 is ";
-	for (int i = 0; i < vecOne.size(); i++)
-	{
-		cout << vecOne[i] << " ";
-	}
-	cout << endl;
-
+	numSteps = mergeFiles(numFiles);
+	outputResult(numSteps);
 	
 	auto stop = chrono::high_resolution_clock::now();
 	auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
