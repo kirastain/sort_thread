@@ -85,12 +85,12 @@ void	readNumbers(int position, int *count)
 	}
 }
 
-void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps)
+void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int flag)
 {
 	ifstream	f1;
 	ifstream	f2;
 	ofstream	out1;
-	string		outFileNmae;
+	string		outFileName;
 	uint32_t	a;
 	uint32_t	b;
 	
@@ -98,12 +98,18 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps)
 	{
 		f1.open(fileOne);
 		f2.open(fileTwo);
-		stringstream ss;
-		ss << "temp" << countSteps << count;
-		outFileNmae = ss.str();
-		ss.clear();
-		out1.open(outFileNmae);
-
+		if (flag == 0)
+		{
+			stringstream ss;
+			ss << "temp" << countSteps << count;
+			outFileName = ss.str();
+			ss.str("");
+		}
+		else
+		{
+			outFileName = "merge";
+		}
+		out1.open(outFileName);
 		string line1;
 		string line2;
 		getline(f1, line1);
@@ -119,6 +125,7 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps)
 		{
 			if (a == b)
 			{
+				out1 << a << endl << b << endl;
 				getline(f1, line1);
 				getline(f2, line2);
 				istringstream iss1(line1);
@@ -171,10 +178,9 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps)
 	{
 		std::cerr << e.what() << endl;
 	}
-	
 }
 
-int	mergeFiles(int numFiles)
+int		mergeFiles(int numFiles)
 {
 	stringstream f1;
 	stringstream f2;
@@ -188,19 +194,21 @@ int	mergeFiles(int numFiles)
 		{
 			f1 << "temp" << countSteps - 1 << i;
 			f2 << "temp" << countSteps - 1 << i + 1;
+			if (numFiles % 2 == 1 && i == numFiles - 3)
+			{
+				mergeTwo(f1.str(), f2.str(), countFiles, countSteps, 1);
+				f2.str("");
+				f2 << "temp" << countSteps - 1 << i + 2;
+				mergeTwo("merge", f2.str(), countFiles, countSteps, 0);
+				f2.str("");
+				f1.str("");
+				break ;
+			}
 			//cout << "files " << f1.str() << " " << f2.str() << endl;
-			mergeTwo(f1.str(), f2.str(), countFiles, countSteps);
+			mergeTwo(f1.str(), f2.str(), countFiles, countSteps, 0);
 			f1.str("");
 			f2.str("");
 			countFiles++;
-		}
-		if (numFiles % 2 == 0)
-		{
-			//easy tree
-		}
-		else
-		{
-			//here
 		}
 		numFiles = numFiles / 2;
 		countSteps++;	
@@ -245,11 +253,10 @@ void	outputResult(int numSteps)
 int main(void)
 {
 	auto start = chrono::high_resolution_clock::now();
-	generateRandom();
+	//generateRandom();
 	vector<uint32_t> vecOne;
 	int	numFiles;
 	int numSteps;
-
 
 	thread threadOne(readNumbers, 0, &numFiles);
 	threadOne.join();

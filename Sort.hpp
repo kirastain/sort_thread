@@ -10,10 +10,11 @@
 #include <chrono>
 #include <sstream>
 #include <string.h>
+#include <cstdio>
 
 #include <ctime>
 #include <bitset>
 
-#define BUFF_SIZE 64
+#define BUFF_SIZE 128
 
 using namespace std;

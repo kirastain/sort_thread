@@ -14,11 +14,17 @@ $(NAME): $(OBJS)
 
 clean:
 	@rm $(OBJS)
+	@rm temp*
+	@rm "merge"
+	@rm "output"
 	@echo ".o files removed"
 
-fclean: clean
+fclean: clean inputclean
 	@rm $(NAME)
 	@echo "Files removed"
+
+inputclean:
+	@rm input
 
 re: fclean all
 
