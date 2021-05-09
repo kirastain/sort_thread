@@ -121,7 +121,7 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 		iss1.str("");
 		iss2.str("");
 
-		while(a && b)
+		while(a || b)
 		{
 			if (a == b)
 			{
@@ -130,8 +130,30 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 				getline(f2, line2);
 				istringstream iss1(line1);
 				istringstream iss2(line2);
-				if (!(iss1 >> a) || !(iss2 >> b))
+				if (!(iss1 >> a))
+				{
+					while (b)
+					{
+						out1 << b << endl;
+						getline (f2, line2);
+						istringstream iss2(line2);
+						if (!(iss2 >> b))
+							break ;
+					}
 					break ;
+				}
+				else if (!(iss2 >> b))
+				{
+					while (a)
+					{
+						out1 << a << endl;
+						getline (f1, line1);
+						istringstream iss1(line1);
+						if (!(iss1 >> a))
+							break ;
+					}
+					break ;
+				}
 			}
 			else if (a < b)
 			{
@@ -180,41 +202,39 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 	}
 }
 
-int		mergeFiles(int numFiles)
+int		mergeFiles(int *numFiles, int *countSteps)
 {
 	stringstream f1;
 	stringstream f2;
 	int countFiles;
-	int countSteps = 1;
+	*countSteps = *countSteps + 1;
 
-	while (numFiles > 1)
+	while (*numFiles > 1)
 	{
 		countFiles = 0;
-		for (int i = 0; i < numFiles - 1; i = i + 2)
+		for (int i = 0; i < *numFiles - 1; i = i + 2)
 		{
-			f1 << "temp" << countSteps - 1 << i;
-			f2 << "temp" << countSteps - 1 << i + 1;
-			if (numFiles % 2 == 1 && i == numFiles - 3)
+			f1 << "temp" << *countSteps - 1 << i;
+			f2 << "temp" << *countSteps - 1 << i + 1;
+			if (*numFiles % 2 == 1 && i == *numFiles - 3)
 			{
-				mergeTwo(f1.str(), f2.str(), countFiles, countSteps, 1);
+				mergeTwo(f1.str(), f2.str(), countFiles, *countSteps, 1);
 				f2.str("");
-				f2 << "temp" << countSteps - 1 << i + 2;
-				mergeTwo("merge", f2.str(), countFiles, countSteps, 0);
+				f2 << "temp" << *countSteps - 1 << i + 2;
+				mergeTwo("merge", f2.str(), countFiles, *countSteps, 0);
 				f2.str("");
 				f1.str("");
 				break ;
 			}
 			//cout << "files " << f1.str() << " " << f2.str() << endl;
-			mergeTwo(f1.str(), f2.str(), countFiles, countSteps, 0);
+			mergeTwo(f1.str(), f2.str(), countFiles, *countSteps, 0);
 			f1.str("");
 			f2.str("");
 			countFiles++;
 		}
-		numFiles = numFiles / 2;
-		countSteps++;	
+		*numFiles = *numFiles / 2;
+		*countSteps = *countSteps + 1;	
 	}
-
-	return (countSteps);
 }
 
 void	outputResult(int numSteps)
@@ -255,13 +275,22 @@ int main(void)
 	auto start = chrono::high_resolution_clock::now();
 	//generateRandom();
 	vector<uint32_t> vecOne;
-	int	numFiles;
-	int numSteps;
+	int	numFiles = 0;
+	int numSteps = 0;
 
-	thread threadOne(readNumbers, 0, &numFiles);
-	threadOne.join();
+	thread threadRead(readNumbers, 0, &numFiles);
+	threadRead.join();
 	cout << "files num = " << numFiles << endl;
-	numSteps = mergeFiles(numFiles);
+	threadRead.~thread();
+
+	/* ----- Threads --- */
+	
+	thread threadOne(mergeFiles, &numFiles, &numSteps);
+	threadOne.join();
+
+	/* --- end thread ---- */
+
+	//mergeFiles(numFiles, numSteps);
 	outputResult(numSteps);
 	
 	auto stop = chrono::high_resolution_clock::now();
