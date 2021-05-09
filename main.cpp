@@ -11,11 +11,11 @@ void	generateRandom()
 	try
 	{
 		file.open(path, ios::binary);
-		for (int i = 0; i < 20; i++)
+		for (int i = 0; i < 100; i++)
 		{
 			num = rand() % 50; //% RAND_MAX;
 			numStr = bitset<32>(num).to_string();
-			cout << numStr << endl;
+			//cout << numStr << endl;
 			file << numStr;
 		}
 		file.close();
@@ -237,6 +237,48 @@ int		mergeFiles(int *numFiles, int *countSteps)
 	}
 }
 
+void	mergeFilesThread(int *numFiles, int *countSteps, int filesCanMerge, int position)
+{
+	stringstream f1;
+	stringstream f2;
+	int countFiles;
+	*countSteps = *countSteps + 1;
+
+	while (*numFiles > 1)
+	{
+		countFiles = 0;
+		int numThreads = *numFiles / 2;
+		thread sortingThreads[numThreads];
+
+		for (int i = 0; i < numThreads; i++)
+		{
+			f1 << "temp" << *countSteps - 1 << countFiles;
+			f2 << "temp" << *countSteps - 1 << countFiles + 1;
+			if (i == numThreads - 1 && *numFiles % 2 == 1)
+			{
+				mergeTwo(f1.str(), f2.str(), i, *countSteps, 1);
+				f2.str("");
+				f2 << "temp" << *countSteps - 1 << countFiles + 2;
+				sortingThreads[i] = thread(mergeTwo, "merge", f2.str(), i, *countSteps, 0);
+				f2.str("");
+				f1.str("");
+				break ;
+			}
+			//cout << "files " << f1.str() << " " << f2.str() << endl;
+			sortingThreads[i] = thread(mergeTwo, f1.str(), f2.str(), i, *countSteps, 0);
+			f1.str("");
+			f2.str("");
+			countFiles = countFiles + 2;
+		}
+		for (int i = 0; i < numThreads; i++)
+		{
+			sortingThreads[i].join();
+		}
+		*numFiles = *numFiles / 2;
+		*countSteps = *countSteps + 1;	
+	}
+}
+
 void	outputResult(int numSteps)
 {
 	string 		outFileName = "output";
@@ -284,9 +326,10 @@ int main(void)
 	threadRead.~thread();
 
 	/* ----- Threads --- */
+	int filesCanMerge = 2;
 	
-	thread threadOne(mergeFiles, &numFiles, &numSteps);
-	threadOne.join();
+	//mergeFiles(&numFiles, &numSteps);
+	mergeFilesThread(&numFiles, &numSteps, filesCanMerge, 0);
 
 	/* --- end thread ---- */
 
