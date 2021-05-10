@@ -17,6 +17,6 @@
 #include <ctime>
 #include <bitset>
 
-#define BUFF_SIZE 1600
+#define BUFF_SIZE 419430400
 
 using namespace std;
