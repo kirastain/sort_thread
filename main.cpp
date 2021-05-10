@@ -11,9 +11,9 @@ void	generateRandom()
 	try
 	{
 		file.open(path, ios::binary);
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 10000; i++)
 		{
-			num = rand() % 50; //% RAND_MAX;
+			num = rand() % 5000; //% RAND_MAX;
 			numStr = bitset<32>(num).to_string();
 			//std::cout << numStr << endl;
 			file << numStr;
@@ -69,13 +69,13 @@ void	readNumbers(int position, int *count)
 				i += 32;
 			}
 			sort(vec.begin(), vec.end());
-			std::cout << "vec " << *count << " is ";
+			//std::cout << "vec " << *count << " is ";
 			for (i = 0; i < vec.size(); i++)
 			{
-				std::cout << vec[i] << " ";
+				//std::cout << vec[i] << " ";
 				temp << vec[i] << endl;
 			}
-			std::cout << endl;
+			//std::cout << endl;
 			temp.close();
 			ss.str("");
 			vec.clear();
@@ -96,7 +96,7 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 {
 	ifstream	f1;
 	ifstream	f2;
-	ofstream	out1;
+	ofstream	output;
 	string		outFileName;
 	uint32_t	a;
 	uint32_t	b;
@@ -116,92 +116,55 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 		{
 			outFileName = "merge";
 		}
-		out1.open(outFileName);
-		string line1;
-		string line2;
-		std::getline(f1, line1);
-		std::getline(f2, line2);
-		istringstream iss1(line1);
-		istringstream iss2(line2);
-		iss1 >> a;
-		iss2 >> b;
-		iss1.str("");
-		iss2.str("");
+		output.open(outFileName);
+		// string line1;
+		// string line2;
+		// std::getline(f1, line1);
+		// std::getline(f2, line2);
+		// istringstream iss1(line1);
+		// istringstream iss2(line2);
+		f1 >> a;
+		f2 >> b;
 
-		while(a || b)
+		//std::cout << "iss are " << iss1.str() << " " << iss2.str() << endl;
+		//std::cout << "nums are " << a << " " << b << endl;
+		while (f1 && f2)
 		{
-			if (a == b)
+			//std::cout << "curr is " << a << " " << b << endl;
+			if (a <= b)
 			{
-				out1 << a << endl << b << endl;
-				std::getline(f1, line1);
-				std::getline(f2, line2);
-				istringstream iss1(line1);
-				istringstream iss2(line2);
-				if (!(iss1 >> a))
-				{
-					while (b)
-					{
-						out1 << b << endl;
-						std::getline (f2, line2);
-						istringstream iss2(line2);
-						if (!(iss2 >> b))
-							break ;
-					}
-					break ;
-				}
-				else if (!(iss2 >> b))
-				{
-					while (a)
-					{
-						out1 << a << endl;
-						std::getline (f1, line1);
-						istringstream iss1(line1);
-						if (!(iss1 >> a))
-							break ;
-					}
-					break ;
-				}
+				output << a << endl;
+				if (!(f1 >> a))
+					break;
 			}
-			else if (a < b)
+			else
 			{
-				out1 << a << endl;
-				std::getline (f1, line1);
-				istringstream iss1(line1);
-				if (!(iss1 >> a))
-				{
-					while (b)
-					{
-						out1 << b << endl;
-						std::getline (f2, line2);
-						istringstream iss2(line2);
-						if (!(iss2 >> b))
-							break ;
-					}
-					break ;
-				}
+				output << b << endl;
+				if (!(f2 >> b))
+					break;
 			}
-			else if (b < a)
+		}
+		if (!f1)
+		{
+			//std::cout << "empty file 1" << endl;
+			output << b << endl;
+			while (f2 >> b)
 			{
-				out1 << b << endl;
-				std::getline (f2, line2);
-				istringstream iss2(line2);
-				if (!(iss2 >> b))
-				{
-					while (a)
-					{
-						out1 << a << endl;
-						std::getline (f1, line1);
-						istringstream iss1(line1);
-						if (!(iss1 >> a))
-							break ;
-					}
-					break ;
-				}
+				output << b << endl;
+			}
+		}
+		else if (!f2)
+		{
+			//std::cout << "empty file 2" << endl;
+			output << a << endl;
+			while (f1 >> a)
+			{
+				output << a << endl;
 			}
 		}
 		f1.close();
 		f2.close();
-		out1.close();
+		output.close();
 	}
 	catch(const std::exception& e)
 	{
@@ -299,6 +262,7 @@ void	outputResult(int numSteps)
 	{
 		stringstream inFileName;
 		inFileName << "temp" << numSteps - 1 << 0;
+		std::cout << "result in file " << inFileName.str() << endl;
 		inFile.open(inFileName.str());
 		outFile.open(outFileName);
 		while (std::getline(inFile, line))
@@ -335,8 +299,8 @@ int main(void)
 	/* ----- Threads --- */
 	int filesCanMerge = 2;
 	
-	//mergeFiles(&numFiles, &numSteps);
-	mergeFilesThread(&numFiles, &numSteps, filesCanMerge, 0);
+	mergeFiles(&numFiles, &numSteps);
+	//mergeFilesThread(&numFiles, &numSteps, filesCanMerge, 0);
 
 	/* --- end thread ---- */
 
