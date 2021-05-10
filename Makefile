@@ -19,7 +19,7 @@ clean:
 	@rm "output"
 	@echo ".o files removed"
 
-fclean: clean inputclean
+fclean: clean
 	@rm $(NAME)
 	@echo "Files removed"
 

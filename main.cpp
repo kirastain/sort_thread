@@ -15,7 +15,7 @@ void	generateRandom()
 		{
 			num = rand() % 50; //% RAND_MAX;
 			numStr = bitset<32>(num).to_string();
-			//cout << numStr << endl;
+			//std::cout << numStr << endl;
 			file << numStr;
 		}
 		file.close();
@@ -34,49 +34,56 @@ vector<uint32_t>	sortVector(vector<uint32_t> vec)
 
 void	readNumbers(int position, int *count)
 {
-	char *buffer = new char[BUFF_SIZE];
+	char *buffer = new char[BUFF_SIZE + 1];
 	vector<uint32_t> vec;
-	ifstream	inputFile;
-	string		path = "input";
+	//ifstream	inputFile;
+	//string		path = "input";
+	int inputFile;
 	uint32_t	num;
 	char		*numChar = new char[sizeof(uint32_t) * 8];
 	ofstream	temp;
-	string		tempFile;
 
 	try
 	{
-		inputFile.open(path, ios::binary);
-		*count = 0;
+		//inputFile.open(path, ios::binary);
 
-		while (inputFile.read(buffer, BUFF_SIZE))
+		*count = 0;
+		bzero(buffer, BUFF_SIZE + 1);
+		inputFile = open("input", O_RDONLY);
+		//while (inputFile.read(buffer, BUFF_SIZE))
+		while ((read(inputFile, buffer, BUFF_SIZE)) > 0)
 		{
+			//std::cout << "gor line with count = " << *count << endl;
 			stringstream ss;
 			ss << "temp" << position << *count;
-			tempFile = ss.str();
-			temp.open(tempFile, ios::binary);
-			//cout << "str is " << buffer << endl;
+			temp.open(ss.str(), ios::binary);
+			//std::cout << "str is " << buffer << endl;
 
 			int i = 0;
 			while (buffer[i])
 			{
 				memcpy(numChar, &buffer[i], sizeof(uint32_t) * 8);
 				num = stoul(numChar, 0, 2);
-				//cout << "num is " << num << endl;
+				//std::cout << "num is " << num << endl;
 				vec.push_back(num);
 				i += 32;
 			}
 			sort(vec.begin(), vec.end());
+			std::cout << "vec " << *count << " is ";
 			for (i = 0; i < vec.size(); i++)
 			{
+				std::cout << vec[i] << " ";
 				temp << vec[i] << endl;
 			}
+			std::cout << endl;
 			temp.close();
-			ss.clear();
+			ss.str("");
 			vec.clear();
 			*count = *count + 1;
+			bzero(buffer, BUFF_SIZE + 1);
 		}
-		inputFile.close();
-		delete buffer;
+		//inputFile.close();
+		close(inputFile);
 		delete numChar;
 	}
 	catch(const std::exception& e)
@@ -112,8 +119,8 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 		out1.open(outFileName);
 		string line1;
 		string line2;
-		getline(f1, line1);
-		getline(f2, line2);
+		std::getline(f1, line1);
+		std::getline(f2, line2);
 		istringstream iss1(line1);
 		istringstream iss2(line2);
 		iss1 >> a;
@@ -126,8 +133,8 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 			if (a == b)
 			{
 				out1 << a << endl << b << endl;
-				getline(f1, line1);
-				getline(f2, line2);
+				std::getline(f1, line1);
+				std::getline(f2, line2);
 				istringstream iss1(line1);
 				istringstream iss2(line2);
 				if (!(iss1 >> a))
@@ -135,7 +142,7 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 					while (b)
 					{
 						out1 << b << endl;
-						getline (f2, line2);
+						std::getline (f2, line2);
 						istringstream iss2(line2);
 						if (!(iss2 >> b))
 							break ;
@@ -147,7 +154,7 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 					while (a)
 					{
 						out1 << a << endl;
-						getline (f1, line1);
+						std::getline (f1, line1);
 						istringstream iss1(line1);
 						if (!(iss1 >> a))
 							break ;
@@ -158,14 +165,14 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 			else if (a < b)
 			{
 				out1 << a << endl;
-				getline (f1, line1);
+				std::getline (f1, line1);
 				istringstream iss1(line1);
 				if (!(iss1 >> a))
 				{
 					while (b)
 					{
 						out1 << b << endl;
-						getline (f2, line2);
+						std::getline (f2, line2);
 						istringstream iss2(line2);
 						if (!(iss2 >> b))
 							break ;
@@ -176,14 +183,14 @@ void	mergeTwo(string fileOne, string fileTwo, int count, int countSteps, int fla
 			else if (b < a)
 			{
 				out1 << b << endl;
-				getline (f2, line2);
+				std::getline (f2, line2);
 				istringstream iss2(line2);
 				if (!(iss2 >> b))
 				{
 					while (a)
 					{
 						out1 << a << endl;
-						getline (f1, line1);
+						std::getline (f1, line1);
 						istringstream iss1(line1);
 						if (!(iss1 >> a))
 							break ;
@@ -226,7 +233,7 @@ int		mergeFiles(int *numFiles, int *countSteps)
 				f1.str("");
 				break ;
 			}
-			//cout << "files " << f1.str() << " " << f2.str() << endl;
+			//std::cout << "files " << f1.str() << " " << f2.str() << endl;
 			mergeTwo(f1.str(), f2.str(), countFiles, *countSteps, 0);
 			f1.str("");
 			f2.str("");
@@ -264,7 +271,7 @@ void	mergeFilesThread(int *numFiles, int *countSteps, int filesCanMerge, int pos
 				f1.str("");
 				break ;
 			}
-			//cout << "files " << f1.str() << " " << f2.str() << endl;
+			//std::cout << "files " << f1.str() << " " << f2.str() << endl;
 			sortingThreads[i] = thread(mergeTwo, f1.str(), f2.str(), i, *countSteps, 0);
 			f1.str("");
 			f2.str("");
@@ -294,7 +301,7 @@ void	outputResult(int numSteps)
 		inFileName << "temp" << numSteps - 1 << 0;
 		inFile.open(inFileName.str());
 		outFile.open(outFileName);
-		while (getline(inFile, line))
+		while (std::getline(inFile, line))
 		{
 			istringstream iss1(line);
 			if (!(iss1 >> num))
@@ -322,7 +329,7 @@ int main(void)
 
 	thread threadRead(readNumbers, 0, &numFiles);
 	threadRead.join();
-	cout << "files num = " << numFiles << endl;
+	std::cout << "files num = " << numFiles << endl;
 	threadRead.~thread();
 
 	/* ----- Threads --- */
@@ -338,7 +345,7 @@ int main(void)
 	
 	auto stop = chrono::high_resolution_clock::now();
 	auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
-	cout << "time taken: " << duration.count() << endl;
+	std::cout << "time taken: " << duration.count() << endl;
 
 	return (0);
 }
