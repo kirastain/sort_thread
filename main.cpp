@@ -1,12 +1,47 @@
 #include "Sort.hpp"
 
+void	generateRandom()
+{
+	srand((unsigned)time(0));
+	uint32_t	num;
+	ofstream	file;
+	string		path = "input";
+	string		numStr;
+
+	try
+	{
+		file.open(path, ios::binary);
+		if (file.fail())
+		{
+			std::cout << "Error while opening input file" << endl;
+		}
+		else
+		{
+			for (int i = 0; i < 10; i++)
+			{
+				num = rand() % 50; //% RAND_MAX;
+				std::cout << "generated num is " << num << endl;
+				//numStr = bitset<32>(num).to_string();
+				//std::cout << numStr << endl;
+				//file << numStr;
+				file.write((char*)&num, sizeof(num));
+			}
+			file.close();
+		}
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << endl;
+	}	
+}
+
 void	readNumbers(int position, int *count)
 {
 	char				*buffer = new char[BUFF_SIZE + 1];
 	vector<uint32_t>	vec;
 	int 				inputFile;
 	uint32_t			num;
-	char				*numChar = new char[sizeof(uint32_t) * 8];
+	char				*numChar = new char[sizeof(uint32_t)];
 	ofstream			temp;
 
 	try
@@ -23,10 +58,12 @@ void	readNumbers(int position, int *count)
 			int i = 0;
 			while (buffer[i])
 			{
-				memcpy(numChar, &buffer[i], sizeof(uint32_t) * 8);
-				num = stoul(numChar, 0, 2);
+				memcpy(numChar, &buffer[i], sizeof(uint32_t));
+				num = *reinterpret_cast<uint32_t*>(numChar);
+				std::cout << "read num is " << num << endl;
+				//num = stoul(numChar, 0, 2);
 				vec.push_back(num);
-				i += 32;
+				i += sizeof(uint32_t);
 			}
 			sort(vec.begin(), vec.end());
 			for (i = 0; i < vec.size(); i++)
@@ -40,7 +77,7 @@ void	readNumbers(int position, int *count)
 			bzero(buffer, BUFF_SIZE + 1);
 		}
 		close(inputFile);
-		delete numChar;
+		bzero(numChar, sizeof(uint32_t));
 	}
 	catch(const std::exception& e)
 	{
@@ -171,14 +208,15 @@ void	outputResult(int numSteps)
 		stringstream inFileName;
 		inFileName << "temp" << numSteps - 1 << 0;
 		inFile.open(inFileName.str());
-		outFile.open(outFileName);
+		outFile.open(outFileName, ios::binary);
 		while (std::getline(inFile, line))
 		{
 			istringstream iss1(line);
 			if (!(iss1 >> num))
 				break ;
-			outLine = bitset<32>(num).to_string();
-			outFile << outLine;
+			//outLine = bitset<32>(num).to_string();
+			//outFile << outLine;
+			outFile.write((char*)&num, sizeof(num));
 		}
 		outFile.close();
 		inFile.close();
@@ -192,6 +230,7 @@ void	outputResult(int numSteps)
 
 int main(void)
 {
+	generateRandom();
 	vector<uint32_t> vecOne;
 	int	numFiles = 0;
 	int numSteps = 0;
