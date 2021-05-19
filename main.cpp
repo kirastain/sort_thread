@@ -5,28 +5,29 @@ void	generateRandom()
 	srand((unsigned)time(0));
 	uint32_t	num;
 	ofstream	file;
+	ofstream	file_nums;
 	string		path = "input";
 	string		numStr;
 
 	try
 	{
-		file.open(path, ios::binary);
+		file.open(path, ios::out | ios::binary);
+		file_nums.open("test_nums");
 		if (file.fail())
 		{
 			std::cout << "Error while opening input file" << endl;
 		}
 		else
 		{
-			for (int i = 0; i < 10; i++)
+			std::cout << NUMBERS << endl;
+			for (int i = 0; i < NUMBERS; i++)
 			{
-				num = rand() % 50; //% RAND_MAX;
-				std::cout << "generated num is " << num << endl;
-				//numStr = bitset<32>(num).to_string();
-				//std::cout << numStr << endl;
-				//file << numStr;
+				num = rand() % RAND_MAX;
 				file.write((char*)&num, sizeof(num));
+				file_nums << num << endl;
 			}
 			file.close();
+			file_nums.close();
 		}
 	}
 	catch(const std::exception& e)
@@ -40,29 +41,31 @@ void	readNumbers(int position, int *count)
 	char				*buffer = new char[BUFF_SIZE + 1];
 	vector<uint32_t>	vec;
 	int 				inputFile;
-	uint32_t			num;
-	char				*numChar = new char[sizeof(uint32_t)];
+	uint32_t			*num;
 	ofstream			temp;
+	char		*numChar = new char[sizeof(uint32_t) + 1];
+
 
 	try
 	{
 		*count = 0;
 		bzero(buffer, BUFF_SIZE + 1);
 		inputFile = open("input", O_RDONLY);
-		while ((read(inputFile, buffer, BUFF_SIZE)) > 0)
+		int rd = 0;
+		while ((rd = read(inputFile, buffer, BUFF_SIZE)) > 0)
 		{
+			buffer[BUFF_SIZE] = '\0';
 			stringstream ss;
 			ss << "temp" << position << *count;
-			temp.open(ss.str(), ios::binary);
+			temp.open(ss.str());
 
 			int i = 0;
-			while (buffer[i])
+			while (i < rd)
 			{
 				memcpy(numChar, &buffer[i], sizeof(uint32_t));
-				num = *reinterpret_cast<uint32_t*>(numChar);
-				std::cout << "read num is " << num << endl;
-				//num = stoul(numChar, 0, 2);
-				vec.push_back(num);
+				numChar[sizeof(uint32_t)] = '\0';
+				num = reinterpret_cast<uint32_t*>(numChar);
+				vec.push_back(*num);
 				i += sizeof(uint32_t);
 			}
 			sort(vec.begin(), vec.end());
@@ -77,7 +80,6 @@ void	readNumbers(int position, int *count)
 			bzero(buffer, BUFF_SIZE + 1);
 		}
 		close(inputFile);
-		bzero(numChar, sizeof(uint32_t));
 	}
 	catch(const std::exception& e)
 	{
@@ -214,8 +216,6 @@ void	outputResult(int numSteps)
 			istringstream iss1(line);
 			if (!(iss1 >> num))
 				break ;
-			//outLine = bitset<32>(num).to_string();
-			//outFile << outLine;
 			outFile.write((char*)&num, sizeof(num));
 		}
 		outFile.close();

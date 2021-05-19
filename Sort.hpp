@@ -17,6 +17,12 @@
 #include <ctime>
 #include <bitset>
 
-#define BUFF_SIZE 419430400
+#ifndef BUFF_SIZE
+#define BUFF_SIZE 240000000
+#endif
+
+#ifndef NUMBERS
+#define NUMBERS 1000
+#endif
 
 using namespace std;

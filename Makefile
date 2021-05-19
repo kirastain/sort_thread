@@ -26,6 +26,9 @@ fclean: clean
 inputclean:
 	@rm input
 
+cleantemps:
+	@rm temp*
+
 re: fclean all
 
 .PHONY: all clean fclean re
