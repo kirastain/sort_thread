@@ -250,15 +250,23 @@ void	outputResult(int numSteps)
 int main(void)
 {
 	//generateRandom();
+	auto start = chrono::high_resolution_clock::now();
 	int	numFiles = 0;
 	int numSteps = 0;
 
 	readNumbersThread(&numFiles);
-	std::cout << "read" << endl;
+	
+	auto mid = chrono::high_resolution_clock::now();
+	auto durationMid = chrono::duration_cast<chrono::microseconds>(mid - start);
+	std::cout << "time read: " << durationMid.count() << endl;
 
 	int filesCanMerge = 2;
 	mergeFilesThread(&numFiles, &numSteps);
 	outputResult(numSteps);
+
+	auto stop = chrono::high_resolution_clock::now();
+	auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+	std::cout << "time taken: " << duration.count() << endl;
 
 	return (0);
 }

@@ -23,7 +23,7 @@
 #endif
 
 #ifndef NUMBERS
-#define NUMBERS 10000000
+#define NUMBERS 1000000
 #endif
 
 #define THREADS_LIMIT 10
