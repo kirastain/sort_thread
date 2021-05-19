@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <mutex>
 
 #include <ctime>
 #include <bitset>
@@ -22,7 +23,9 @@
 #endif
 
 #ifndef NUMBERS
-#define NUMBERS 1000
+#define NUMBERS 10000000
 #endif
+
+#define THREADS_LIMIT 10
 
 using namespace std;

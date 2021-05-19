@@ -5,85 +5,108 @@ void	generateRandom()
 	srand((unsigned)time(0));
 	uint32_t	num;
 	ofstream	file;
-	ofstream	file_nums;
+	//ofstream	file_nums;
 	string		path = "input";
 	string		numStr;
 
-	try
+	file.open(path, ios::out | ios::binary);
+	//file_nums.open("test_nums");
+	if (file.fail())
 	{
-		file.open(path, ios::out | ios::binary);
-		file_nums.open("test_nums");
-		if (file.fail())
-		{
-			std::cout << "Error while opening input file" << endl;
-		}
-		else
-		{
-			std::cout << NUMBERS << endl;
-			for (int i = 0; i < NUMBERS; i++)
-			{
-				num = rand() % RAND_MAX;
-				file.write((char*)&num, sizeof(num));
-				file_nums << num << endl;
-			}
-			file.close();
-			file_nums.close();
-		}
+		std::cout << "Error while opening input file" << endl;
 	}
-	catch(const std::exception& e)
+	else
 	{
-		std::cerr << e.what() << endl;
+		for (int i = 0; i < NUMBERS; i++)
+		{
+			num = rand() % RAND_MAX;
+			file.write((char*)&num, sizeof(num));
+			//file_nums << num << endl;
+		}
+		file.close();
+		//file_nums.close();
 	}	
 }
 
-void	readNumbers(int position, int *count)
+void	readNumbers(int position, int *numFiles, ifstream *inputFile, mutex *readMutex, mutex *fileMutex)
 {
-	char				*buffer = new char[BUFF_SIZE + 1];
 	vector<uint32_t>	vec;
-	int 				inputFile;
-	uint32_t			*num;
+	uint32_t			num;
 	ofstream			temp;
-	char		*numChar = new char[sizeof(uint32_t) + 1];
-
+	int					numsRead;
 
 	try
 	{
-		*count = 0;
-		bzero(buffer, BUFF_SIZE + 1);
-		inputFile = open("input", O_RDONLY);
-		int rd = 0;
-		while ((rd = read(inputFile, buffer, BUFF_SIZE)) > 0)
+		while(!(inputFile->eof()))
 		{
-			buffer[BUFF_SIZE] = '\0';
-			stringstream ss;
-			ss << "temp" << position << *count;
-			temp.open(ss.str());
-
-			int i = 0;
-			while (i < rd)
+			numsRead = 0;
+			num = 0;
+			while(!(inputFile->eof()) && numsRead < BUFF_SIZE / 4)
 			{
-				memcpy(numChar, &buffer[i], sizeof(uint32_t));
-				numChar[sizeof(uint32_t)] = '\0';
-				num = reinterpret_cast<uint32_t*>(numChar);
-				vec.push_back(*num);
-				i += sizeof(uint32_t);
+				readMutex->lock();
+				if (!(inputFile->read(reinterpret_cast<char*>(&num), sizeof(uint32_t))))
+					{
+						readMutex->unlock();
+						break;
+					}
+				readMutex->unlock();
+				vec.push_back(num);
+				numsRead++;
 			}
 			sort(vec.begin(), vec.end());
-			for (i = 0; i < vec.size(); i++)
+			stringstream ss;
+			fileMutex->lock();
+			ss << "temp" << 0 << *numFiles;
+			*numFiles = *numFiles + 1;
+			fileMutex->unlock();
+			temp.open(ss.str());
+			if (temp.fail())
+			{
+				std::cout << "Error creating temp files" << endl;
+				exit(1);
+			}
+			for (int i = 0; i < vec.size(); i++)
 			{
 				temp << vec[i] << endl;
 			}
 			temp.close();
 			ss.str("");
 			vec.clear();
-			*count = *count + 1;
-			bzero(buffer, BUFF_SIZE + 1);
 		}
-		close(inputFile);
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << endl;
+	}
+}
+
+void	readNumbersThread(int *numFiles)
+{
+	string		inputFileName = "input";
+	ifstream	inputFile;
+	thread		readingThreads[THREADS_LIMIT];
+	mutex		readMutex;
+	mutex		fileMutex;
+
+	inputFile.open(inputFileName, ios::binary);
+	if(inputFile.fail())
+	{
+		std::cout << "Error while opening input file" << endl;
+		exit(1);
+	}
+	else
+	{
+		*numFiles = 0;
+		for (int i = 0; i < THREADS_LIMIT; i++)
+		{
+			readingThreads[i] = thread(readNumbers, i, numFiles, &inputFile, &readMutex, &fileMutex);
+		}
+		for (int i = 0; i < THREADS_LIMIT; i++)
+		{
+			readingThreads[i].join();
+			readingThreads[i].~thread();
+		}
+		inputFile.close();
 	}
 }
 
@@ -205,39 +228,33 @@ void	outputResult(int numSteps)
 	uint32_t	num;
 	string		outLine;
 
-	try
+	stringstream inFileName;
+	inFileName << "temp" << numSteps - 1 << 0;
+	inFile.open(inFileName.str());
+	outFile.open(outFileName, ios::binary);
+	if (inFile.fail() || outFile.fail())
 	{
-		stringstream inFileName;
-		inFileName << "temp" << numSteps - 1 << 0;
-		inFile.open(inFileName.str());
-		outFile.open(outFileName, ios::binary);
-		while (std::getline(inFile, line))
-		{
-			istringstream iss1(line);
-			if (!(iss1 >> num))
-				break ;
-			outFile.write((char*)&num, sizeof(num));
-		}
-		outFile.close();
-		inFile.close();
+		std::cout << "Error while opening file" << endl;
 	}
-	catch(const std::exception& e)
+	while (std::getline(inFile, line))
 	{
-		std::cerr << e.what() << endl;
+		istringstream iss1(line);
+		if (!(iss1 >> num))
+			break ;
+		outFile.write((char*)&num, sizeof(num));
 	}
-	
+	outFile.close();
+	inFile.close();	
 }
 
 int main(void)
 {
-	generateRandom();
-	vector<uint32_t> vecOne;
+	//generateRandom();
 	int	numFiles = 0;
 	int numSteps = 0;
 
-	thread threadRead(readNumbers, 0, &numFiles);
-	threadRead.join();
-	threadRead.~thread();
+	readNumbersThread(&numFiles);
+	std::cout << "read" << endl;
 
 	int filesCanMerge = 2;
 	mergeFilesThread(&numFiles, &numSteps);
