@@ -5,12 +5,10 @@ void	generateRandom()
 	srand((unsigned)time(0));
 	uint32_t	num;
 	ofstream	file;
-	//ofstream	file_nums;
 	string		path = "input";
 	string		numStr;
 
 	file.open(path, ios::out | ios::binary);
-	//file_nums.open("test_nums");
 	if (file.fail())
 	{
 		std::cout << "Error while opening input file" << endl;
@@ -21,10 +19,8 @@ void	generateRandom()
 		{
 			num = rand() % RAND_MAX;
 			file.write((char*)&num, sizeof(num));
-			//file_nums << num << endl;
 		}
 		file.close();
-		//file_nums.close();
 	}	
 }
 
@@ -248,50 +244,46 @@ void	outputResult(int numSteps)
 	inFile.close();	
 }
 
-void	mergeNFiles(int numFiles)
+void	mergeNFiles(int numFiles, int startFile, int step)
 {
 	vector<uint32_t>	currentNums;
 	ifstream			files[numFiles];
 	ofstream			resultFile;
-	//deque<uint16_t>		numsMerged;
 	stringstream		ss;
 	int					i;
-	int					count = 0;
 	uint32_t			num;
 
-	for (i = 0; i < numFiles; i++)
+	for (i = startFile; i < numFiles; i++)
 	{
-		ss << "temp" << 0 << i;
+		ss << "temp" << step << i;
 		files[i].open(ss.str());
 		ss.str("");
 	}
 	priority_queue<pair<uint32_t, int>, vector<pair<uint32_t, int> >, std::greater<pair <uint32_t, int> > > numsMerged;
-	resultFile.open("result");
+	ss << "output"; //"temp" << step + 1 << i;
+	resultFile.open(ss.str());
+	ss.str("");
 	if (resultFile.fail())
 	{
 		std::cout << "Error creating result file" << endl;
 		exit(1);
 	}
-	for (i = 0; i < numFiles; i++)
+	for (i = startFile; i < numFiles; i++)
 	{
 		files[i] >> num;
-		//cout << "First num read in file " << i << " is " << num << endl;
 		numsMerged.push(make_pair(num, i));
 	}
 	while (!(numsMerged.empty()))
 	{
 		pair<uint32_t, int> numPair = numsMerged.top();
-		//cout << numPair.first << endl
-		resultFile << numPair.first << endl;
-		;
+		resultFile.write((char*)&(numPair.first), sizeof(numPair.first)); //<< numPair.first << endl;
 		numsMerged.pop();
 		if (files[numPair.second] >> num)
 		{
 			numsMerged.push(make_pair(num, numPair.second));
 		}
-		count++;
 	}
-	for (i = 0; i < numFiles; i++)
+	for (i = startFile; i < numFiles; i++)
 	{
 		files[i].close();
 	}
@@ -300,26 +292,32 @@ void	mergeNFiles(int numFiles)
 
 int main(void)
 {
-	//generateRandom();
-	auto start = chrono::high_resolution_clock::now();
+	// auto start = chrono::high_resolution_clock::now();
 	int	numFiles = 0;
-	int numSteps = 0;
+	//int numSteps = 0;
 
 	readNumbersThread(&numFiles);
 	
-	auto mid = chrono::high_resolution_clock::now();
-	auto durationMid = chrono::duration_cast<chrono::microseconds>(mid - start);
-	std::cout << "time read: " << durationMid.count() << endl;
+	// auto mid = chrono::high_resolution_clock::now();
+	// auto durationMid = chrono::duration_cast<chrono::microseconds>(mid - start);
+	// std::cout << "time read: " << durationMid.count() << endl;
 
-	mergeNFiles(numFiles);
+	mergeNFiles(numFiles, 0, 0);
+	// int numMerges = 0;
+	// thread firstLevelOne(mergeNFiles, numFiles / 2, 0, numSteps, &numMerges);
+	// thread firstLevelTwo(mergeNFiles, numFiles, numFiles / 2, numSteps, &numMerges);
+
+	// firstLevelOne.join();
+	// firstLevelTwo.join();
+	// numSteps++;
 
 	// int filesCanMerge = 2;
 	// mergeFilesThread(&numFiles, &numSteps);
-	outputResult(numSteps);
+	//outputResult(numSteps);
 
-	auto stop = chrono::high_resolution_clock::now();
-	auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
-	std::cout << "time taken: " << duration.count() << endl;
+	// auto stop = chrono::high_resolution_clock::now();
+	// auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+	// std::cout << "time taken: " << duration.count() << endl;
 
 	return (0);
 }
