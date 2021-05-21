@@ -229,7 +229,8 @@ void	outputResult(int numSteps)
 	string		outLine;
 
 	stringstream inFileName;
-	inFileName << "temp" << numSteps - 1 << 0;
+	//inFileName << "temp" << numSteps - 1 << 0;
+	inFileName << "result";
 	inFile.open(inFileName.str());
 	outFile.open(outFileName, ios::binary);
 	if (inFile.fail() || outFile.fail())
@@ -247,6 +248,56 @@ void	outputResult(int numSteps)
 	inFile.close();	
 }
 
+void	mergeNFiles(int numFiles)
+{
+	vector<uint32_t>	currentNums;
+	ifstream			files[numFiles];
+	ofstream			resultFile;
+	//deque<uint16_t>		numsMerged;
+	stringstream		ss;
+	int					i;
+	int					count = 0;
+	uint32_t			num;
+
+	for (i = 0; i < numFiles; i++)
+	{
+		ss << "temp" << 0 << i;
+		files[i].open(ss.str());
+		ss.str("");
+	}
+	priority_queue<pair<uint32_t, int>, vector<pair<uint32_t, int> >, std::greater<pair <uint32_t, int> > > numsMerged;
+	resultFile.open("result");
+	if (resultFile.fail())
+	{
+		std::cout << "Error creating result file" << endl;
+		exit(1);
+	}
+	for (i = 0; i < numFiles; i++)
+	{
+		files[i] >> num;
+		//cout << "First num read in file " << i << " is " << num << endl;
+		numsMerged.push(make_pair(num, i));
+	}
+	while (!(numsMerged.empty()))
+	{
+		pair<uint32_t, int> numPair = numsMerged.top();
+		//cout << numPair.first << endl
+		resultFile << numPair.first << endl;
+		;
+		numsMerged.pop();
+		if (files[numPair.second] >> num)
+		{
+			numsMerged.push(make_pair(num, numPair.second));
+		}
+		count++;
+	}
+	for (i = 0; i < numFiles; i++)
+	{
+		files[i].close();
+	}
+	resultFile.close();
+}
+
 int main(void)
 {
 	//generateRandom();
@@ -260,8 +311,10 @@ int main(void)
 	auto durationMid = chrono::duration_cast<chrono::microseconds>(mid - start);
 	std::cout << "time read: " << durationMid.count() << endl;
 
-	int filesCanMerge = 2;
-	mergeFilesThread(&numFiles, &numSteps);
+	mergeNFiles(numFiles);
+
+	// int filesCanMerge = 2;
+	// mergeFilesThread(&numFiles, &numSteps);
 	outputResult(numSteps);
 
 	auto stop = chrono::high_resolution_clock::now();
