@@ -1,6 +1,6 @@
-NAME = test
+NAME = sort
 FLAGS = -std=c++14 -D_NDEBUG -O3 -lpthread
-SRCS = ./main.cpp 
+SRCS = ./Sort.cpp 
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)
@@ -14,8 +14,6 @@ $(NAME): $(OBJS)
 
 clean:
 	@rm $(OBJS)
-	@rm temp*
-	@rm "merge"
 	@rm "output"
 	@echo ".o files removed"
 
@@ -29,6 +27,14 @@ inputclean:
 cleantemps:
 	@rm temp*
 
+generate:
+	@g++ -o generate $(FLAGS) Generate.cpp
+	@./generate
+
+test_sort:
+	@g++ -o generate_test $(FLAGS) GenerateTest.cpp
+	@./generate_test
+
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re test generate inputclean cleantemps

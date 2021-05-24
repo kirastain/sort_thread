@@ -7,23 +7,24 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
-#include <chrono>
+//#include <chrono>
 #include <sstream>
 #include <string.h>
 #include <mutex>
 #include <deque>
 #include <queue>
+#include <iterator>
 
-#include <ctime>
-#include <bitset>
+//#include <ctime>
+//#include <bitset>
 
 #ifndef BUFF_SIZE
-#define BUFF_SIZE 2621440
-//#define BUFF_SIZE 8
+#define BUFF_SIZE 28311552
 #endif
 
 #ifndef NUMBERS
-#define NUMBERS 100000000
+//#define NUMBERS 373543891
+#define NUMBERS 10
 #endif
 
 #define THREADS_LIMIT 4
